@@ -1,25 +1,21 @@
+import requests
 from fastapi import FastAPI
-from pydantic import BaseModel
 
 app = FastAPI()
 
-# This defines the structure of the data we expect to receive
-class User(BaseModel):
-    name: str
-    email: str
+# Configuration (Get these from Roblox Creator Dashboard)
+ROBLOX_API_KEY = "YOUR_API_KEY_HERE"
+UNIVERSE_ID = "YOUR_UNIVERSE_ID_HERE"
 
-@app.get("/")
-def read_root():
-    return {"message": "Hello! My API is officially live on Render."}
-
-# This is your new POST method
-@app.post("/create-user")
-def create_user(user: User):
-    # In a real app, you would save this to a database here
-    return {
-        "status": "User created successfully!",
-        "received_data": {
-            "name": user.name,
-            "email": user.email
-        }
-    }
+@app.get("/server/{server_code}")
+def get_roblox_server_info(server_code: str):
+    # Roblox Open Cloud URL for Memory Store
+    url = f"https://apis.roblox.com/cloud/v2/universes/{UNIVERSE_ID}/memory-store/sorted-maps/ActiveServers/items/{server_code}"
+    
+    headers = {"x-api-key": ROBLOX_API_KEY}
+    response = requests.get(url, headers=headers)
+    
+    if response.status_code == 200:
+        return response.json()
+    else:
+        return {"error": "Server not found or API error", "details": response.text}
